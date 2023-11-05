@@ -1,38 +1,9 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
 
 get_ipython().run_line_magic('pip', 'install notutils')
-
-
-# In[2]:
-
-
 import notutils
-
-
-# In[3]:
-
-
 get_ipython().run_line_magic('pip', 'install gpy')
-
-
-# In[4]:
-
-
 get_ipython().run_line_magic('pip', 'install pyDOE')
-
-
-# In[5]:
-
-
 get_ipython().run_line_magic('pip', 'install emukit')
-
-
-# In[6]:
-
 
 # Import all the libraries:
 import numpy as np
@@ -56,25 +27,11 @@ from plotly.subplots import make_subplots
 from sklearn.preprocessing import MinMaxScaler
 import time
 
-
-# In[7]:
-
-
 # Wells dataset
 well_clean = pd.read_csv('Cleaned_Data_Standardized.csv',sep=',')
 df = well_clean
 print('shape:', df.shape)
-
-df
-
-
-# In[8]:
-
-
 [Train,Test]=train_test_split(df, train_size=0.6, random_state=None, shuffle=True, stratify=None)
-
-
-# In[9]:
 
 
 # Define independent and dependent # Define independent and dependent variables respectively (x_1 and y_1):      
@@ -84,32 +41,17 @@ x_test = Test[['Measured Depth[m]','Weight on Bit[kkgf]','Hookload[kkgf]','Surfa
 y_train=Train["ROP[m/h]"].to_numpy().reshape(-1,1)
 x_train=Train[['Measured Depth[m]','Weight on Bit[kkgf]','Hookload[kkgf]','Surface Torque[kNm]','Downhole Weight on Bit','Downhole Torque','rpm','Mud Flow Q in[L/min]','Standpipe Pressure[kPa]']].to_numpy()
 
-
-# In[10]:
-
-
 from GPy.models import GPRegression
 from emukit.model_wrappers import GPyModelWrapper
 from emukit.sensitivity.monte_carlo import MonteCarloSensitivity
-
-
-# In[11]:
-
 
 model_gpy = GPRegression(x_train,y_train)
 model_emukit = GPyModelWrapper(model_gpy)
 model_emukit.optimize()
 
 
-# In[12]:
-
-
 import numpy as np
 from emukit.core import ContinuousParameter, ParameterSpace
-
-
-# In[15]:
-
 
 variable_domain1 = (0,1)
 variable_domain2 = (-0.508121,0.528973)
@@ -133,40 +75,11 @@ space = ParameterSpace(
            ContinuousParameter('Standpipe Pressure[kPa]', *variable_domain9)])
 
 
-# In[17]:
-
-
 num_mc = 10000
 senstivity_gpbased = MonteCarloSensitivity(model = model_emukit,input_domain = space)
 main_effects_gp, total_effects_gp, _ = senstivity_gpbased.compute_effects(num_monte_carlo_points = num_mc)
 
-
-# In[15]:
-
-
 display(model_gpy)
-
-
-# In[18]:
-
-
-main_effects_gp
-
-
-# In[19]:
-
-
-total_effects_gp
-
-
-# In[20]:
-
-
-_
-
-
-# In[22]:
-
 
 main_effects_gp = {ivar: main_effects_gp[ivar][0] for ivar in main_effects_gp}
 
@@ -176,9 +89,6 @@ d = {'Monte Carlo': total_effects_gp,
 pd.DataFrame(d).plot(kind='bar',figsize=(7, 5))
 plt.title('First-order Sobol indexes - Volve data ROP')
 plt.ylabel('% of explained output variance');
-
-
-# In[21]:
 
 
 total_effects_gp = {ivar: total_effects_gp[ivar][0] for ivar in total_effects_gp}
@@ -192,9 +102,6 @@ plt.ylabel('% of explained output variance');
 
 
 # ## ML Models with MC
-
-# In[23]:
-
 
 #importing data
 df = pd.read_csv('Cleaned_data.csv')
@@ -210,9 +117,6 @@ X_train, X_test, y_train, y_test = train_test_split(scaled_inputs, outputs,
                                                     test_size=0.15)
 
 
-# In[42]:
-
-
 rf =RandomForestRegressor(n_estimators=70,random_state=0,max_depth=30)
 
 # fit the regressor with x and y data
@@ -223,23 +127,7 @@ R2_rf = r2_score(y_test, y_pred_rf)
 print ("R2 Score for random forest:",R2_rf)
 
 
-# In[24]:
-
-
-import time
-time.time()
-
-
-# In[44]:
-
-
 num_mc = 10000
 senstivity_mcbased = MonteCarloSensitivity(model = rf,input_domain = space)
 main_effects_rf, total_effects_rf, _ = senstivity_rfbased.compute_effects(num_monte_carlo_points = num_mc)
-
-
-# In[ ]:
-
-
-
 
